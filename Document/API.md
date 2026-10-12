@@ -57,7 +57,9 @@ A text split into segments that share a font, ready to draw.
 
 ### CanvasExtensions
 
+The overloads follow the `SKCanvas.DrawText` overloads that SkiaSharp 4 keeps, so the alignment is always given.  
+
 | Name | Description |
 |---|---|
-| `DrawText(this SKCanvas canvas, DrawableText text, float x, float y, SKPaint paint)` | Draws the text from `x` on the baseline `y` |
-| `DrawText(this SKCanvas canvas, DrawableText text, float x, float y, SKTextAlign textAlign, SKPaint paint)` | Draws the text with its left edge, center or right edge at `x`, like `SKCanvas.DrawText` with an `SKTextAlign` |
+| `DrawText(this SKCanvas canvas, DrawableText text, float x, float y, SKTextAlign textAlign, SKPaint paint)` | Draws the text on the baseline `y` with its left edge, center or right edge at `x` |
+| `DrawText(this SKCanvas canvas, DrawableText text, SKPoint p, SKTextAlign textAlign, SKPaint paint)` | Same with the position given as a point |

@@ -4,8 +4,8 @@ using SkiaSharp;
 
 public static class CanvasExtensions
 {
-    public static void DrawText(this SKCanvas canvas, DrawableText text, float x, float y, SKPaint paint) =>
-        canvas.DrawText(text, x, y, SKTextAlign.Left, paint);
+    public static void DrawText(this SKCanvas canvas, DrawableText text, SKPoint p, SKTextAlign textAlign, SKPaint paint) =>
+        canvas.DrawText(text, p.X, p.Y, textAlign, paint);
 
     public static void DrawText(this SKCanvas canvas, DrawableText text, float x, float y, SKTextAlign textAlign, SKPaint paint)
     {

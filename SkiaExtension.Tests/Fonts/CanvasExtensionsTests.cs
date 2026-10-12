@@ -13,11 +13,26 @@ public sealed class CanvasExtensionsTests
         var text = resolver.CreateText("見出し abc", 20, false);
 
         // Act
-        using var left = Render((canvas, paint) => canvas.DrawText(text, 40, 30, paint));
+        using var left = Render((canvas, paint) => canvas.DrawText(text, 40, 30, SKTextAlign.Left, paint));
         using var aligned = Render((canvas, paint) => canvas.DrawText(text, 40 + (text.Width * ratio), 30, textAlign, paint));
 
         // Assert
         Assert.InRange(LeftmostInk(aligned) - LeftmostInk(left), -1, 1);
+    }
+
+    [Fact]
+    public void PointIsTheSameAsTheCoordinates()
+    {
+        // Arrange
+        using var resolver = new FontResolver("sans-serif", ["ja"], []);
+        var text = resolver.CreateText("見出し abc", 20, false);
+
+        // Act
+        using var coordinates = Render((canvas, paint) => canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint));
+        using var point = Render((canvas, paint) => canvas.DrawText(text, new SKPoint(150, 30), SKTextAlign.Center, paint));
+
+        // Assert
+        Assert.Equal(coordinates.Bytes, point.Bytes);
     }
 
     [Fact]
