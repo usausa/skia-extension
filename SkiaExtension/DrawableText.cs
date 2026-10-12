@@ -1,4 +1,4 @@
-namespace SkiaExtension.Fonts;
+namespace SkiaExtension;
 
 public sealed record DrawableText(IReadOnlyList<TextSegment> Segments, float Width)
 {

@@ -1,4 +1,4 @@
-namespace SkiaExtension.Tests.Fonts;
+namespace SkiaExtension.Tests;
 
 public sealed class FontResolverTests
 {
@@ -34,10 +34,10 @@ public sealed class FontResolverTests
         using var resolver = new FontResolver("sans-serif", ["ja"], []);
 
         // Act
-        var text = resolver.CreateText("✈️", 20, false);
+        var text = resolver.CreateText("✈\uFE0F", 20, false);
 
         // Assert
-        Assert.DoesNotContain(text.Segments, static segment => segment.Text.Contains('️', StringComparison.Ordinal));
+        Assert.DoesNotContain(text.Segments, static segment => segment.Text.Contains('\uFE0F', StringComparison.Ordinal));
     }
 
     [Fact]

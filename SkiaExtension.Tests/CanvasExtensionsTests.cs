@@ -1,4 +1,4 @@
-namespace SkiaExtension.Tests.Fonts;
+namespace SkiaExtension.Tests;
 
 public sealed class CanvasExtensionsTests
 {
@@ -45,6 +45,52 @@ public sealed class CanvasExtensionsTests
         Assert.Equal(-1, LeftmostInk(bitmap));
     }
 
+    [Fact]
+    public void ArcIsDrawnOnlyAlongTheSweep()
+    {
+        // Arrange
+        var center = new SKPoint(150, 25);
+
+        // Act
+        using var bitmap = Render((canvas, paint) =>
+        {
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = 8;
+            canvas.DrawArc(center, 20, 0, 90, false, paint);
+        });
+
+        // Assert
+        Assert.True(Ink(bitmap, AngleHelper.GetPoint(center, 20, 45)));
+        Assert.False(Ink(bitmap, AngleHelper.GetPoint(center, 20, 225)));
+    }
+
+    [Fact]
+    public void UseCenterFillsTheWedge()
+    {
+        // Arrange
+        var center = new SKPoint(150, 25);
+
+        // Act
+        using var wedge = Render((canvas, paint) => canvas.DrawArc(center, 20, 0, 90, true, paint));
+        using var segment = Render((canvas, paint) => canvas.DrawArc(center, 20, 0, 90, false, paint));
+
+        // Assert
+        Assert.True(Ink(wedge, AngleHelper.GetPoint(center, 5, 45)));
+        Assert.False(Ink(segment, AngleHelper.GetPoint(center, 5, 45)));
+        Assert.True(Ink(segment, AngleHelper.GetPoint(center, 18, 45)));
+    }
+
+    [Fact]
+    public void CenterIsTheSameAsTheOval()
+    {
+        // Act
+        using var oval = Render(static (canvas, paint) => canvas.DrawArc(new SKRect(130, 5, 170, 45), 30, 200, true, paint));
+        using var center = Render(static (canvas, paint) => canvas.DrawArc(new SKPoint(150, 25), 20, 30, 200, true, paint));
+
+        // Assert
+        Assert.Equal(oval.Bytes, center.Bytes);
+    }
+
     private static SKBitmap Render(Action<SKCanvas, SKPaint> draw)
     {
         var bitmap = new SKBitmap(300, 50);
@@ -72,4 +118,6 @@ public sealed class CanvasExtensionsTests
 
         return -1;
     }
+
+    private static bool Ink(SKBitmap bitmap, SKPoint point) => bitmap.GetPixel((int)point.X, (int)point.Y).Alpha > 0;
 }

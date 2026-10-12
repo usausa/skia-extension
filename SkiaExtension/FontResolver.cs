@@ -1,4 +1,4 @@
-namespace SkiaExtension.Fonts;
+namespace SkiaExtension;
 
 using System.Buffers;
 using System.Globalization;
@@ -13,7 +13,7 @@ public sealed class FontResolver : IDisposable
     private const float ProbeSize = 12;
 
     private static readonly string[] EmojiLanguages = ["und-Zsye"];
-    private static readonly SearchValues<char> Selectors = SearchValues.Create("︎️‍");
+    private static readonly SearchValues<char> Selectors = SearchValues.Create("\uFE0E\uFE0F\u200D");
 
     private readonly string familyName;
     private readonly SKTypeface primary;
@@ -111,13 +111,9 @@ public sealed class FontResolver : IDisposable
 
     private static string Sanitize(string text) => text.Replace('\r', ' ').Replace('\n', ' ');
 
-    private static string StripSelectors(string text) => text.AsSpan().IndexOfAny(Selectors) < 0 ? text : text.Replace("️", String.Empty, StringComparison.Ordinal).Replace("︎", String.Empty, StringComparison.Ordinal).Replace("‍", String.Empty, StringComparison.Ordinal);
+    private static string StripSelectors(string text) => text.AsSpan().IndexOfAny(Selectors) < 0 ? text : text.Replace("\uFE0F", String.Empty, StringComparison.Ordinal).Replace("\uFE0E", String.Empty, StringComparison.Ordinal).Replace("\u200D", String.Empty, StringComparison.Ordinal);
 
-    private float GetLineHeight(SKTypeface typeface, float size, bool bold)
-    {
-        var metrics = GetFont(typeface, size, bold).Metrics;
-        return metrics.Descent - metrics.Ascent;
-    }
+    private float GetLineHeight(SKTypeface typeface, float size, bool bold) => GetFont(typeface, size, bold).Metrics.GetLineHeight();
 
     private DrawableText CreateTextCore(string text, float size, bool bold, float maxWidth)
     {
@@ -206,7 +202,7 @@ public sealed class FontResolver : IDisposable
         {
             var index = boundaries[i];
             var end = i + 1 < boundaries.Length ? boundaries[i + 1] : text.Length;
-            var emoji = text.AsSpan(index, end - index).Contains('️');
+            var emoji = text.AsSpan(index, end - index).Contains('\uFE0F');
             var typeface = Rune.TryGetRuneAt(text, index, out var rune) ? ResolveTypeface(rune.Value, emoji) : primary;
             if (ReferenceEquals(typeface, current))
             {

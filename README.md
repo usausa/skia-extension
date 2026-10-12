@@ -4,26 +4,21 @@
 
 ## 🧩 What is this?
 
-Extensions for SkiaSharp, grouped by namespace.  
-The first one, `SkiaExtension.Fonts`, draws text with per character font fallback, so Japanese, emoji and other characters the primary font lacks are drawn with a font that has the glyphs.  
-
-| Namespace | Contents |
-|---|---|
-| `SkiaExtension.Fonts` | Per character font fallback, text truncated with an ellipsis, drawing with an alignment and line heights |
-
-Each feature has its own namespace under `SkiaExtension`.  
-Features that need other dependencies come as separate packages named after their namespace.  
+Extensions for SkiaSharp, mostly extension methods in the `SkiaExtension` namespace.  
+They cover what SkiaSharp 4 leaves to each application: text with per character font fallback, arcs, angles, colors and photos taken in any orientation.  
 
 ## 🚀 Quick Start
 
 Create a `FontResolver` for the primary family, create the text and draw it with the `SKCanvas` extension.  
+`GetCenterBaseline` gives the baseline that centers the text vertically.  
 
 ```csharp
-using SkiaExtension.Fonts;
+using SkiaExtension;
 
 using var resolver = new FontResolver("sans-serif");
 var text = resolver.CreateText("見出し 🍎 text", 16, false, maxWidth: 120);
-canvas.DrawText(text, 70, 40, SKTextAlign.Center, paint);
+var metrics = resolver.GetMetrics(16, false);
+canvas.DrawText(text, rect.MidX, metrics.GetCenterBaseline(rect.MidY), SKTextAlign.Center, paint);
 ```
 
 Characters the primary family lacks are resolved per character, first through `FallbackFonts.Typefaces` and then through the system fonts with the language hints of `FallbackFonts.Languages`.  
@@ -37,15 +32,30 @@ FallbackFonts.Typefaces = [SKTypeface.FromFile("NotoSansJP-Regular.ttf")];
 
 The settings are read when a resolver is created, so set them at startup.  
 
+Arcs, angles, colors and photos:  
+
+```csharp
+using var shader = AngleHelper.CreateArcGradient(center, 135, 270, [SKColors.DodgerBlue, SKColors.Red]);
+paint.Shader = shader;
+canvas.DrawArc(center, radius, 135, 270, false, paint);
+var tip = AngleHelper.GetPoint(center, radius, AngleHelper.ToSkiaAngle(45));
+paint.Color = SKColors.Black.WithOpacity(0.4f);
+
+using var codec = SKCodec.Create(stream);
+using var photo = codec.DecodeOriented();
+using var thumbnail = photo.Resize(0.25f);
+```
+
 ## ✅ Supported features
 
 | Category | Detail |
 |---|---|
-| **Fallback** | Configured typefaces, then the system fonts with BCP-47 language hints |
-| **Emoji** | Emoji presentation sequences use the emoji font; variation selectors and zero width joiners are not drawn |
-| **Text** | Font choice per text element, truncation with an ellipsis, bold by emboldening, cached results |
-| **Drawing** | `SKCanvas.DrawText` extension with left, center and right alignment |
-| **Metrics** | Width of the text, line height of the primary font, or of every font resolved so far |
+| **Fonts** | Per character fallback through configured typefaces and the system fonts with BCP-47 language hints; emoji presentation sequences use the emoji font |
+| **Text** | Text split by font, truncated with an ellipsis and drawn with left, center or right alignment; baselines for the top, the center and the bottom |
+| **Arcs** | `DrawArc`, which `SKCanvas` of SkiaSharp 4 no longer has, and sweep gradients that start where the arc starts |
+| **Angles** | Points on a circle, and angles from 12 o'clock converted to the SkiaSharp angles from 3 o'clock |
+| **Colors** | Interpolation of every channel and colors with an opacity |
+| **Images** | Decoding with the EXIF orientation applied and resizing by a scale |
 
 ## 📖 API
 

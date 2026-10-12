@@ -1,4 +1,4 @@
-namespace SkiaExtension.Tests.Fonts;
+namespace SkiaExtension.Tests;
 
 public sealed class FallbackFontsTests
 {

@@ -1,4 +1,4 @@
-namespace SkiaExtension.Fonts;
+namespace SkiaExtension;
 
 using SkiaSharp;
 
