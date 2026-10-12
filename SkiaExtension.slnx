@@ -1,9 +1,9 @@
 <Solution>
-  <Folder Name="/Example/">
-  </Folder>
   <Folder Name="/Library/">
+    <Project Path="SkiaExtension/SkiaExtension.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="SkiaExtension.Tests/SkiaExtension.Tests.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
@@ -17,6 +17,5 @@
     <File Path="Directory.Build.targets" />
     <File Path="LICENSE" />
     <File Path="README.md" />
-    <File Path="Settings.XamlStyler" />
   </Folder>
 </Solution>
