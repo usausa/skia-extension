@@ -15,8 +15,10 @@ public static class CanvasExtensions
             SKTextAlign.Right => x - text.Width,
             _ => x
         };
-        foreach (var segment in text.Segments)
+        var segments = text.Segments;
+        for (var i = 0; i < segments.Count; i++)
         {
+            var segment = segments[i];
             canvas.DrawText(segment.Text, start, y, SKTextAlign.Left, segment.Font, paint);
             start += segment.Width;
         }

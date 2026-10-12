@@ -65,7 +65,12 @@ public sealed class FontResolver : IDisposable
     public float GetMaxLineHeight(float size, bool bold)
     {
         var height = GetLineHeight(primary, size, bold);
-        foreach (var typeface in fallbacks.Concat(systemByFamily.Values))
+        foreach (var typeface in fallbacks)
+        {
+            height = Math.Max(height, GetLineHeight(typeface, size, bold));
+        }
+
+        foreach (var typeface in systemByFamily.Values)
         {
             height = Math.Max(height, GetLineHeight(typeface, size, bold));
         }
