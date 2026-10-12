@@ -16,6 +16,7 @@ public static class CanvasExtensions
             _ => x
         };
         var segments = text.Segments;
+        // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < segments.Count; i++)
         {
             var segment = segments[i];
