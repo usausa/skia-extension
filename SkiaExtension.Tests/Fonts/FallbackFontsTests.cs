@@ -7,10 +7,10 @@ public sealed class FallbackFontsTests
     {
         // Act
         var languages = FallbackFonts.Languages;
-        var fallbacks = FallbackFonts.Fallbacks;
+        var typefaces = FallbackFonts.Typefaces;
 
         // Assert
         Assert.Null(languages);
-        Assert.Empty(fallbacks);
+        Assert.Empty(typefaces);
     }
 }

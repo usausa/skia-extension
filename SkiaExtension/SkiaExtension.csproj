@@ -10,8 +10,8 @@
   <PropertyGroup>
     <PackageId>SkiaExtension</PackageId>
     <Title>SkiaExtension</Title>
-    <Description>Extensions for SkiaSharp, starting with per character font fallback for emoji and mixed scripts</Description>
-    <PackageTags>skiasharp font fallback emoji text</PackageTags>
+    <Description>Extensions for SkiaSharp</Description>
+    <PackageTags>skiasharp skia extension</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

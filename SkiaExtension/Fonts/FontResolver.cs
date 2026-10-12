@@ -6,7 +6,7 @@ using System.Text;
 
 using SkiaSharp;
 
-public sealed class FallbackFontResolver : IDisposable
+public sealed class FontResolver : IDisposable
 {
     private const int EmojiFlag = 1 << 24;
     private const int CacheLimit = 2048;
@@ -22,21 +22,21 @@ public sealed class FallbackFontResolver : IDisposable
     private readonly Dictionary<string, SKTypeface> systemByFamily = [with(StringComparer.Ordinal)];
     private readonly Dictionary<int, SKTypeface> byCodepoint = [];
     private readonly Dictionary<(SKTypeface Typeface, float Size, bool Bold), SKFont> fonts = [];
-    private readonly Dictionary<(string Text, float Size, bool Bold, float MaxWidth), FallbackTextRun> cache = [];
+    private readonly Dictionary<(string Text, float Size, bool Bold, float MaxWidth), DrawableText> cache = [];
 
     public int Measurements { get; private set; }
 
-    public FallbackFontResolver(string familyName)
-        : this(familyName, FallbackFonts.Languages, FallbackFonts.Fallbacks)
+    public FontResolver(string familyName)
+        : this(familyName, FallbackFonts.Languages, FallbackFonts.Typefaces)
     {
     }
 
-    public FallbackFontResolver(string familyName, IReadOnlyList<string>? languages, IReadOnlyList<SKTypeface> fallbacks)
+    public FontResolver(string familyName, IReadOnlyList<string>? languages, IEnumerable<SKTypeface> typefaces)
     {
         this.familyName = familyName;
         primary = SKTypeface.FromFamilyName(familyName) ?? SKTypeface.Default;
         this.languages = ResolveLanguages(languages);
-        this.fallbacks = fallbacks.ToArray();
+        fallbacks = typefaces.ToArray();
     }
 
     public void Dispose()
@@ -73,11 +73,11 @@ public sealed class FallbackFontResolver : IDisposable
         return height;
     }
 
-    public FallbackTextRun Shape(string text, float size, bool bold, float maxWidth = Single.PositiveInfinity)
+    public DrawableText CreateText(string text, float size, bool bold, float maxWidth = Single.PositiveInfinity)
     {
         if (text.Length == 0)
         {
-            return FallbackTextRun.Empty;
+            return DrawableText.Empty;
         }
 
         var key = (text, size, bold, maxWidth);
@@ -86,14 +86,14 @@ public sealed class FallbackFontResolver : IDisposable
             return cached;
         }
 
-        var run = ShapeCore(Sanitize(text), size, bold, maxWidth);
+        var result = CreateTextCore(Sanitize(text), size, bold, maxWidth);
         if (cache.Count >= CacheLimit)
         {
             cache.Clear();
         }
 
-        cache[key] = run;
-        return run;
+        cache[key] = result;
+        return result;
     }
 
     public void ClearCache() => cache.Clear();
@@ -119,7 +119,7 @@ public sealed class FallbackFontResolver : IDisposable
         return metrics.Descent - metrics.Ascent;
     }
 
-    private FallbackTextRun ShapeCore(string text, float size, bool bold, float maxWidth)
+    private DrawableText CreateTextCore(string text, float size, bool bold, float maxWidth)
     {
         var segments = Segment(text, size, bold);
         var widths = new float[segments.Count];
@@ -131,15 +131,15 @@ public sealed class FallbackFontResolver : IDisposable
             width += widths[i];
         }
 
-        var parts = new List<FallbackTextRunPart>(segments.Count + 1);
+        var result = new List<TextSegment>(segments.Count + 1);
         if (width <= maxWidth)
         {
             for (var i = 0; i < segments.Count; i++)
             {
-                parts.Add(new FallbackTextRunPart(segments[i].Text, widths[i], segments[i].Font));
+                result.Add(new TextSegment(segments[i].Text, widths[i], segments[i].Font));
             }
 
-            return new FallbackTextRun(parts, width);
+            return new DrawableText(result, width);
         }
 
         var ellipsisFont = GetFont(primary, size, bold);
@@ -147,7 +147,7 @@ public sealed class FallbackFontResolver : IDisposable
         var ellipsisWidth = ellipsisFont.MeasureText("…");
         if (ellipsisWidth > maxWidth)
         {
-            return FallbackTextRun.Empty;
+            return DrawableText.Empty;
         }
 
         width = 0f;
@@ -155,7 +155,7 @@ public sealed class FallbackFontResolver : IDisposable
         {
             if (width + widths[i] + ellipsisWidth <= maxWidth)
             {
-                parts.Add(new FallbackTextRunPart(segments[i].Text, widths[i], segments[i].Font));
+                result.Add(new TextSegment(segments[i].Text, widths[i], segments[i].Font));
                 width += widths[i];
                 continue;
             }
@@ -185,20 +185,20 @@ public sealed class FallbackFontResolver : IDisposable
             if (low > 0)
             {
                 var end = low == boundaries.Length ? segmentText.Length : boundaries[low];
-                parts.Add(new FallbackTextRunPart(segmentText[..end], lowWidth, segments[i].Font));
+                result.Add(new TextSegment(segmentText[..end], lowWidth, segments[i].Font));
                 width += lowWidth;
             }
 
             break;
         }
 
-        parts.Add(new FallbackTextRunPart("…", ellipsisWidth, ellipsisFont));
-        return new FallbackTextRun(parts, width + ellipsisWidth);
+        result.Add(new TextSegment("…", ellipsisWidth, ellipsisFont));
+        return new DrawableText(result, width + ellipsisWidth);
     }
 
-    private List<FallbackTextRunPart> Segment(string text, float size, bool bold)
+    private List<TextSegment> Segment(string text, float size, bool bold)
     {
-        var segments = new List<FallbackTextRunPart>();
+        var segments = new List<TextSegment>();
         var boundaries = StringInfo.ParseCombiningCharacters(text);
         SKTypeface? current = null;
         var start = 0;
@@ -215,7 +215,7 @@ public sealed class FallbackFontResolver : IDisposable
 
             if (current is not null)
             {
-                segments.Add(new FallbackTextRunPart(StripSelectors(text[start..index]), 0, GetFont(current, size, bold)));
+                segments.Add(new TextSegment(StripSelectors(text[start..index]), 0, GetFont(current, size, bold)));
             }
 
             current = typeface;
@@ -224,7 +224,7 @@ public sealed class FallbackFontResolver : IDisposable
 
         if (current is not null)
         {
-            segments.Add(new FallbackTextRunPart(StripSelectors(text[start..]), 0, GetFont(current, size, bold)));
+            segments.Add(new TextSegment(StripSelectors(text[start..]), 0, GetFont(current, size, bold)));
         }
 
         return segments;

@@ -6,5 +6,5 @@ public static class FallbackFonts
 {
     public static IReadOnlyList<string>? Languages { get; set; }
 
-    public static IReadOnlyList<SKTypeface> Fallbacks { get; set; } = [];
+    public static IReadOnlyList<SKTypeface> Typefaces { get; set; } = [];
 }
