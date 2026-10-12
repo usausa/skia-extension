@@ -52,7 +52,7 @@ using var thumbnail = photo.Resize(0.25f);
 |---|---|
 | **Fonts** | Per character fallback through configured typefaces and the system fonts with BCP-47 language hints; emoji presentation sequences use the emoji font |
 | **Text** | Text split by font, truncated with an ellipsis and drawn with left, center or right alignment; baselines for the top, the center and the bottom |
-| **Arcs** | `DrawArc`, which `SKCanvas` of SkiaSharp 4 no longer has, and sweep gradients that start where the arc starts |
+| **Arcs** | `DrawArc` by a center and a radius, and sweep gradients that start where the arc starts |
 | **Angles** | Points on a circle, and angles from 12 o'clock converted to the SkiaSharp angles from 3 o'clock |
 | **Colors** | Interpolation of every channel and colors with an opacity |
 | **Images** | Decoding with the EXIF orientation applied and resizing by a scale |

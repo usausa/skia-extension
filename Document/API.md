@@ -59,14 +59,13 @@ A text split into segments that share a font, ready to draw.
 ## 🖌 CanvasExtensions
 
 The `DrawText` overloads follow the `SKCanvas.DrawText` overloads that SkiaSharp 4 keeps, so the alignment is always given.  
-`DrawArc` has the signature of the `SKCanvas.DrawArc` that SkiaSharp 4 removed.  
+`DrawArc` adds the circle form to the oval form `SKCanvas.DrawArc(SKRect, …)` of SkiaSharp.  
 
 | Name | Description |
 |---|---|
 | `DrawText(this SKCanvas canvas, DrawableText text, float x, float y, SKTextAlign textAlign, SKPaint paint)` | Draws the text on the baseline `y` with its left edge, center or right edge at `x` |
 | `DrawText(this SKCanvas canvas, DrawableText text, SKPoint p, SKTextAlign textAlign, SKPaint paint)` | Same with the position given as a point |
-| `DrawArc(this SKCanvas canvas, SKRect oval, float startAngle, float sweepAngle, bool useCenter, SKPaint paint)` | Draws the arc of the oval; `useCenter` closes it through the center into a wedge |
-| `DrawArc(this SKCanvas canvas, SKPoint center, float radius, float startAngle, float sweepAngle, bool useCenter, SKPaint paint)` | Same for a circle |
+| `DrawArc(this SKCanvas canvas, SKPoint center, float radius, float startAngle, float sweepAngle, bool useCenter, SKPaint paint)` | Draws the arc of the circle around `center`; `useCenter` closes it through the center into a wedge |
 
 ## 🔤 FontMetricsExtensions
 
