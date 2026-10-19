@@ -45,6 +45,94 @@ public sealed class CanvasExtensionsTests
         Assert.Equal(-1, LeftmostInk(bitmap));
     }
 
+    [Theory]
+    [InlineData(SKTextAlign.Left, Single.PositiveInfinity)]
+    [InlineData(SKTextAlign.Center, Single.PositiveInfinity)]
+    [InlineData(SKTextAlign.Right, Single.PositiveInfinity)]
+    [InlineData(SKTextAlign.Center, 80f)]
+    public void TextIsDrawnTheSameAsACopyOfItsSegments(SKTextAlign textAlign, float maxWidth)
+    {
+        // Arrange
+        using var resolver = new FontResolver("sans-serif", ["ja"], []);
+        var text = resolver.CreateText("見出し 🍎 abc", 20, false, maxWidth);
+        var copy = text with { Segments = [.. text.Segments] };
+
+        // Act
+        using var expected = Render((canvas, paint) => canvas.DrawText(copy, 150, 30, textAlign, paint));
+        using var first = Render((canvas, paint) => canvas.DrawText(text, 150, 30, textAlign, paint));
+        using var second = Render((canvas, paint) => canvas.DrawText(text, 150, 30, textAlign, paint));
+
+        // Assert
+        Assert.True(text.Segments.Count > 1);
+        Assert.Equal(expected.Bytes, first.Bytes);
+        Assert.Equal(expected.Bytes, second.Bytes);
+    }
+
+    [Fact]
+    public void DrawingTheTextAgainDoesNotAllocate()
+    {
+        // Arrange
+        using var resolver = new FontResolver("sans-serif", ["ja"], []);
+        var text = resolver.CreateText("見出し 🍎 abc", 20, false);
+        using var bitmap = new SKBitmap(300, 50);
+        using var canvas = new SKCanvas(bitmap);
+        using var paint = new SKPaint();
+        canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint);
+
+        // Act
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        for (var i = 0; i < 10; i++)
+        {
+            canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint);
+        }
+
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        // Assert
+        Assert.Equal(0, allocated);
+    }
+
+    [Fact]
+    public void TextIsDrawnAfterTheCacheIsCleared()
+    {
+        // Arrange
+        using var resolver = new FontResolver("sans-serif", ["ja"], []);
+        var text = resolver.CreateText("見出し 🍎 abc", 20, false);
+        using var expected = Render((canvas, paint) => canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint));
+
+        // Act
+        resolver.ClearCache();
+        using var cleared = Render((canvas, paint) => canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint));
+        var created = resolver.CreateText("見出し 🍎 abc", 20, false);
+        using var recreated = Render((canvas, paint) => canvas.DrawText(created, 150, 30, SKTextAlign.Center, paint));
+
+        // Assert
+        Assert.NotSame(text, created);
+        Assert.Equal(expected.Bytes, cleared.Bytes);
+        Assert.Equal(expected.Bytes, recreated.Bytes);
+    }
+
+    [Fact]
+    public void TextIsDrawnAfterTheCacheOverflows()
+    {
+        // Arrange
+        using var resolver = new FontResolver("sans-serif", ["ja"], []);
+        var text = resolver.CreateText("見出し 🍎 abc", 20, false);
+        using var expected = Render((canvas, paint) => canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint));
+
+        // Act
+        for (var i = 0; i < 2048; i++)
+        {
+            resolver.CreateText(i.ToString(CultureInfo.InvariantCulture), 20, false);
+        }
+
+        using var overflowed = Render((canvas, paint) => canvas.DrawText(text, 150, 30, SKTextAlign.Center, paint));
+
+        // Assert
+        Assert.NotSame(text, resolver.CreateText("見出し 🍎 abc", 20, false));
+        Assert.Equal(expected.Bytes, overflowed.Bytes);
+    }
+
     [Fact]
     public void ArcIsDrawnOnlyAlongTheSweep()
     {

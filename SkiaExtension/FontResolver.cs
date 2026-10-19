@@ -54,7 +54,7 @@ public sealed class FontResolver : IDisposable
 
         systemByFamily.Clear();
         byCodepoint.Clear();
-        cache.Clear();
+        ClearCache();
         primary.Dispose();
     }
 
@@ -94,14 +94,25 @@ public sealed class FontResolver : IDisposable
         var result = CreateTextCore(Sanitize(text), size, bold, maxWidth);
         if (cache.Count >= CacheLimit)
         {
-            cache.Clear();
+            ClearCache();
         }
 
         cache[key] = result;
         return result;
     }
 
-    public void ClearCache() => cache.Clear();
+    public void ClearCache()
+    {
+        foreach (var text in cache.Values)
+        {
+            if (text.Segments is TextSegmentList segments)
+            {
+                segments.Release();
+            }
+        }
+
+        cache.Clear();
+    }
 
     private static string[]? ResolveLanguages(IReadOnlyList<string>? languages)
     {
@@ -140,7 +151,7 @@ public sealed class FontResolver : IDisposable
                 result.Add(new TextSegment(segments[i].Text, widths[i], segments[i].Font));
             }
 
-            return new DrawableText(result, width);
+            return new DrawableText(new TextSegmentList(result), width);
         }
 
         var ellipsisFont = GetFont(primary, size, bold);
@@ -194,7 +205,7 @@ public sealed class FontResolver : IDisposable
         }
 
         result.Add(new TextSegment("…", ellipsisWidth, ellipsisFont));
-        return new DrawableText(result, width + ellipsisWidth);
+        return new DrawableText(new TextSegmentList(result), width + ellipsisWidth);
     }
 
     private List<TextSegment> Segment(string text, float size, bool bold)

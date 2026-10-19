@@ -20,6 +20,7 @@ Characters are resolved in this order: the primary family, the fallback typeface
 Emoji presentation sequences (a character followed by U+FE0F) are matched against the emoji font first.  
 Variation selectors and zero width joiners only steer the font choice and are not drawn.  
 Fonts and created texts are owned by the resolver and stay valid until it is disposed.  
+A created text makes its text blobs on the first draw and reuses them while it is cached, so drawing it again does not allocate; a text discarded from the cache still draws, making the blobs on every draw.  
 
 | Constructor | Description |
 |---|---|
@@ -32,9 +33,9 @@ Fonts and created texts are owned by the resolver and stay valid until it is dis
 | `GetMetrics(float size, bool bold)` | `SKFontMetrics` | Metrics of the primary font |
 | `GetLineHeight(float size, bool bold)` | `float` | Line height of the primary font |
 | `GetMaxLineHeight(float size, bool bold)` | `float` | Largest line height of the primary font, the fallback typefaces and the system fonts resolved so far |
-| `ClearCache()` | `void` | Discards the created texts |
+| `ClearCache()` | `void` | Discards the created texts and releases their text blobs |
 | `Measurements` | `int` | Number of text measurements so far, for diagnostics |
-| `Dispose()` | `void` | Releases the fonts and the system typefaces |
+| `Dispose()` | `void` | Releases the fonts, the system typefaces and the text blobs |
 
 `bold` draws with an emboldened font.  
 

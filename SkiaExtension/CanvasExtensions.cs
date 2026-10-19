@@ -16,11 +16,19 @@ public static class CanvasExtensions
             _ => x
         };
         var segments = text.Segments;
-        // ReSharper disable once ForCanBeConvertedToForeach
+        var list = segments as TextSegmentList;
         for (var i = 0; i < segments.Count; i++)
         {
             var segment = segments[i];
-            canvas.DrawText(segment.Text, start, y, SKTextAlign.Left, segment.Font, paint);
+            if (list?.GetBlob(i) is { } blob)
+            {
+                canvas.DrawText(blob, start, y, paint);
+            }
+            else
+            {
+                canvas.DrawText(segment.Text, start, y, SKTextAlign.Left, segment.Font, paint);
+            }
+
             start += segment.Width;
         }
     }
