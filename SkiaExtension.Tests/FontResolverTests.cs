@@ -106,6 +106,20 @@ public sealed class FontResolverTests
         Assert.True(resolver.Measurements > measurements);
     }
 
+    [Fact]
+    public void FontsUseLinearMetrics()
+    {
+        // Arrange
+        using var resolver = new FontResolver("sans-serif", ["ja"], []);
+
+        // Act
+        var text = resolver.CreateText("Total 合計", 6, true);
+
+        // Assert
+        Assert.NotEmpty(text.Segments);
+        Assert.All(text.Segments, static segment => Assert.True(segment.Font.LinearMetrics));
+    }
+
     private static FontResolver CreateResolver(CultureInfo culture)
     {
         var current = CultureInfo.CurrentUICulture;

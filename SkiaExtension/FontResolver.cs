@@ -294,7 +294,7 @@ public sealed class FontResolver : IDisposable
         var key = (typeface, size, bold);
         if (!fonts.TryGetValue(key, out var font))
         {
-            font = new SKFont(typeface, size) { Embolden = bold };
+            font = new SKFont(typeface, size) { Embolden = bold, LinearMetrics = true };
             fonts[key] = font;
         }
 

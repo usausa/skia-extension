@@ -38,6 +38,7 @@ A created text makes its text blobs on the first draw and reuses them while it i
 | `Dispose()` | `void` | Releases the fonts, the system typefaces and the text blobs |
 
 `bold` draws with an emboldened font.  
+Fonts use linear metrics, so the advance widths are not rounded to whole units of the font size and the spacing stays even when the canvas is scaled (FreeType on Android rounds them otherwise).  
 
 ## 🔤 DrawableText
 
