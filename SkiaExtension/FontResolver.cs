@@ -261,12 +261,25 @@ public sealed class FontResolver : IDisposable
             typeface = primary;
             if (!ContainsGlyph(primary, codepoint))
             {
-                typeface = Array.Find(fallbacks, fallback => ContainsGlyph(fallback, codepoint)) ?? MatchSystemFont(codepoint, languages) ?? primary;
+                typeface = FindFallback(codepoint) ?? MatchSystemFont(codepoint, languages) ?? primary;
             }
         }
 
         byCodepoint[key] = typeface;
         return typeface;
+    }
+
+    private SKTypeface? FindFallback(int codepoint)
+    {
+        foreach (var fallback in fallbacks)
+        {
+            if (ContainsGlyph(fallback, codepoint))
+            {
+                return fallback;
+            }
+        }
+
+        return null;
     }
 
     private SKTypeface? MatchSystemFont(int codepoint, string[]? hints)

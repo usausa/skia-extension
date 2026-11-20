@@ -53,6 +53,26 @@ public sealed class FontResolverTests
         Assert.All(text.Segments, static segment => Assert.All(segment.Text.EnumerateRunes(), rune => Assert.True(segment.Font.ContainsGlyph(rune.Value))));
     }
 
+    [Fact]
+    public void FallbackTypefaceIsUsedWhenThePrimaryHasNoGlyph()
+    {
+        // Arrange
+        using var matched = SKFontManager.Default.MatchCharacter("Arial", SKFontStyle.Normal, ["ja"], '一');
+        Assert.NotNull(matched);
+        var family = FindFamilyWithGlyph('一', matched.FamilyName);
+        Assert.NotNull(family);
+        using var fallback = SKTypeface.FromFamilyName(family);
+        Assert.NotNull(fallback);
+        using var resolver = new FontResolver("Arial", ["ja"], [fallback]);
+
+        // Act
+        var text = resolver.CreateText("一", 12, false);
+
+        // Assert
+        Assert.Same(fallback, text.Segments[0].Font.Typeface);
+        Assert.NotEqual(matched.FamilyName, text.Segments[0].Font.Typeface.FamilyName);
+    }
+
     [Theory]
     [InlineData("ja-JP")]
     [InlineData("zh-CN")]
@@ -118,6 +138,31 @@ public sealed class FontResolverTests
         // Assert
         Assert.NotEmpty(text.Segments);
         Assert.All(text.Segments, static segment => Assert.True(segment.Font.LinearMetrics));
+    }
+
+    private static string? FindFamilyWithGlyph(int codepoint, string excluded)
+    {
+        foreach (var family in SKFontManager.Default.FontFamilies)
+        {
+            if (String.Equals(family, excluded, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            using var candidate = SKTypeface.FromFamilyName(family);
+            if (candidate is null)
+            {
+                continue;
+            }
+
+            using var font = new SKFont(candidate);
+            if (font.ContainsGlyph(codepoint))
+            {
+                return family;
+            }
+        }
+
+        return null;
     }
 
     private static FontResolver CreateResolver(CultureInfo culture)
